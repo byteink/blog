@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Posts on byteink</title>
+    <link>https://byteink.net/post/index.xml</link>
+    <description>Recent content in Posts on byteink</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <copyright>byteink</copyright>
+    <lastBuildDate>Wed, 25 Jun 2014 00:00:00 +0000</lastBuildDate>
+    <atom:link href="https://byteink.net/post/index.xml" rel="self" type="application/rss+xml" />
+    
+    <item>
+      <title>STL中迭代器失效规则及遍历删除问题</title>
+      <link>https://byteink.net/2014/06/25/stl_iterator/</link>
+      <pubDate>Wed, 25 Jun 2014 00:00:00 +0000</pubDate>
+      
+      <guid>https://byteink.net/2014/06/25/stl_iterator/</guid>
+      <description>&lt;p&gt;主要讨论 STL 中几种容器的插入和删除操作可能引起的迭代器失效问题。&lt;br /&gt;
+本质在于 vector、list、deque、map、set 这几种容器的底层实现机制。&lt;/p&gt;
+
+&lt;p&gt;vector 基于连续内存，对于其之上的插入操作分两种情况：&lt;br /&gt;
+1. 若插入未引起扩容行为，则插入点之前的迭代器不会失效，插入点之后的因后移操作而失效；&lt;br /&gt;
+2. 插入操作引起扩容行为，则所有迭代器均失效；&lt;br /&gt;
+对于其删除行为，由于前移行为，删除点之后的迭代器会失效。&lt;/p&gt;
+
+&lt;p&gt;list 基于节点，对于其之上的插入操作，所有迭代器都不会受到影响；&lt;br /&gt;
+删除行为则只会导致被删除节点的迭代器失效。&lt;/p&gt;
+
+&lt;p&gt;deque 基于分段连续内存，对于其之上的插入操作会导致所有的迭代器都失效。&lt;br /&gt;
+删除操作分两种情况：&lt;br /&gt;
+1）从头部或尾部删除：只会导致被删除位置的迭代器失效；&lt;br /&gt;
+2）删除其他位置：所有的迭代器都会失效。&lt;/p&gt;
+
+&lt;p&gt;map 和 set 都属于关联容器，其底层实现基于二叉搜索树（红黑树）。&lt;br /&gt;
+对于插入行为，所有迭代器都不会受影响；删除只会影响被删除位置的迭代器。&lt;/p&gt;
+
+&lt;p&gt;另一问题：如何遍历容器中的每个元素，删除所有符合某个条件的元素？&lt;br /&gt;
+例如删除所有元素值为某个特定值的元素，或者删除所有值为偶数的元素。&lt;br /&gt;
+1. 对于 vector 和 deque 基于连续内存的容器，使用 earse-remove 方法：&lt;/p&gt;
+
+&lt;pre&gt;&lt;code class=&#34;language-cpp&#34;&gt;bool isEven(int a) {
+    return a % 2 == 0;
+}
+
+int main()
+{
+    vector&amp;lt;int&amp;gt; vec({1, 2, 3, 4, 5, 6, 5, 5}); // c++11 list-initialization
+
+    // 删除所有值为5的元素
+    vec.erase(remove(vec.begin(), vec.end(), 5),
+            vec.end());
+    // 删除偶数元素
+    vec.erase(remove_if(vec.begin(), vec.end(), isEven),
+            vec.end());
+}
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+    </item>
+    
+    <item>
+      <title>UNIX 网络编程中SOCKET错误小结</title>
+      <link>https://byteink.net/2012/12/05/unp_socket_error/</link>
+      <pubDate>Wed, 05 Dec 2012 00:00:00 +0000</pubDate>
+      
+      <guid>https://byteink.net/2012/12/05/unp_socket_error/</guid>
+      <description>
+
+&lt;h2 id=&#34;udp&#34;&gt;UDP&lt;/h2&gt;
+
+&lt;h3 id=&#34;write&#34;&gt;write&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;写一个数据报大小大于发送缓冲区 EMSGSIZE&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;数据链路层输出队列空间不足 ENOBUFS&lt;br /&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h2 id=&#34;tcp&#34;&gt;TCP&lt;/h2&gt;
+
+&lt;h3 id=&#34;产生rst的三个条件&#34;&gt;产生RST的三个条件:&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;目的地为某端口的SYN到达，但服务器没有在监听&lt;/li&gt;
+&lt;li&gt;TCP想取消一个已有链接&lt;/li&gt;
+&lt;li&gt;TCP收到一个不存在的连接上的分节&lt;br /&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;connet&#34;&gt;connet&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;客户未收到SYN的响应，规定时间内重发SYN，失败返回 ETIMEDOUT&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;对客户SYN的响应是RST，表示在指定的端口上没有进程在监听，马上返回 ECONNREFUSED&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;客户的SYN在中间路由器引发“destination unreachable”ICMP错误， 规定时间内重发SYN，失败返回 EHOSTUNREACH 或 ENETUNREACH&lt;br /&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;listen&#34;&gt;listen&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;客户SYN到达，listen队列是满的，TCP就忽略该分节，不发送RST&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;accpet&#34;&gt;accpet&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;三路握手完成，调用accpet之前，收到客户的RST： accept返回 ECONNABORTED 错误&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;write-1&#34;&gt;write&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;向一个已收到RST的套接字写操作，内核发送SIGPIPE信号，写操作返回 EPIPE&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;服务器崩溃，规定时间内重传，失败后返回 ETIMEOUT，若中间路由判定主机不可达，返回 EHOSTUNREACH 或 ENETUNREACH&lt;br /&gt;&lt;/li&gt;
+&lt;li&gt;写半部已关闭，EPIPE&lt;br /&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3 id=&#34;read&#34;&gt;read&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;非阻塞，无数据 EAGAIN  or  EWOULDBLOCK&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+    </item>
+    
+  </channel>
+</rss>
