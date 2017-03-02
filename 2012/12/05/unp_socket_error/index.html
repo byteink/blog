@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>UNIX 网络编程中SOCKET错误小结 &middot; byteink</title>
+        <meta name="description" content=" UDP write  写一个数据报大小大于发送缓冲区 EMSGSIZE
+ 数据链路层输出队列空间不足 ENOBUFS
+  TCP 产生RST的三个条件:  目的地为某端口的SYN到达，但服务器没有在监听 TCP想取消一个已有链接 TCP收到一个不存在的连接上的分节
+  connet  客户未收到SYN的响应，规定时间内重发SYN，失败返回 ETIMEDOUT
+ 对客户SYN的响应是RST，表示在指定的端口上没有进程在监听，马上返回 ECONNREFUSED
+ 客户的SYN在中间路由器引发“destination unreachable”ICMP错误， 规定时间内重发SYN，失败返回 EHOSTUNREACH 或 ENETUNREACH
+  listen  客户SYN到达，listen队列是满的，TCP就忽略该分节，不发送RST  accpet  三路握手完成，调用accpet之前，收到客户的RST： accept返回 ECONNABORTED 错误  write  向一个已收到RST的套接字写操作，内核发送SIGPIPE信号，写操作返回 EPIPE
+ 服务器崩溃，规定时间内重传，失败后返回 ETIMEOUT，若中间路由判定主机不可达，返回 EHOSTUNREACH 或 ENETUNREACH
+ 写半部已关闭，EPIPE
+  read  非阻塞，无数据 EAGAIN or EWOULDBLOCK  ">
+        <meta name="HandheldFriendly" content="True">
+        <meta name="MobileOptimized" content="320">
+        <meta name="generator" content="Hugo 0.19" />
+        <meta name="robots" content="index,follow">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        <link rel="stylesheet" href="https://byteink.net/dist/styles.css">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,400,600,700,300&subset=latin,cyrillic-ext,latin-ext,cyrillic">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+        
+    </head>
+    <body>
+        
+
+        <div id="wrapper">
+            <header class="site-header">
+                <div class="container">
+                    <div class="site-title-wrapper">
+                        
+                            <h1 class="site-title">
+                                <a title="byteink" href="https://byteink.net/">byteink</a>
+                            </h1>
+                        
+                        <a class="button-square" href="https://byteink.net/index.xml"><i class="fa fa-rss"></i></a>
+                        
+                        
+                        
+                            <a class="button-square button-social hint--top" data-hint="Github" title="Github" href="https://github.com/byteink">
+                                <i class="fa fa-github-alt"></i>
+                            </a>
+                        
+                        
+                        
+                        
+                        
+                    </div>
+
+                    <ul class="site-nav">
+                        
+    <li class="site-nav-item">
+        <a title="Blog" href="/">Blog</a>
+    </li>
+
+    <li class="site-nav-item">
+        <a title="Projects" href="/project/">Projects</a>
+    </li>
+
+    <li class="site-nav-item">
+        <a title="Contact" href="/page/contact/">Contact</a>
+    </li>
+
+    <li class="site-nav-item">
+        <a title="About" href="/page/about/">About</a>
+    </li>
+
+                    </ul>
+                </div>
+            </header>
+
+            <div id="container">
+
+
+<div class="container">
+    <article class="post-container" itemscope="" itemtype="http://schema.org/BlogPosting">
+        <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">UNIX 网络编程中SOCKET错误小结</h1>
+    
+    <p class="post-date">
+        <span>Published <time datetime="2012-12-05" itemprop="datePublished">Wed, Dec 5, 2012</time></span>
+        <span>by</span>
+        <span itemscope="" itemprop="author" itemtype="https://schema.org/Person">
+            <span itemprop="name">
+                <a href="" itemprop="url" rel="author">byteink</a>
+            </span>
+        </span>
+    </p>
+</header>
+
+        <div class="post-content clearfix" itemprop="articleBody">
+    
+
+    
+
+<h2 id="udp">UDP</h2>
+
+<h3 id="write">write</h3>
+
+<ul>
+<li>写一个数据报大小大于发送缓冲区 EMSGSIZE<br /></li>
+<li>数据链路层输出队列空间不足 ENOBUFS<br /></li>
+</ul>
+
+<h2 id="tcp">TCP</h2>
+
+<h3 id="产生rst的三个条件">产生RST的三个条件:</h3>
+
+<ul>
+<li>目的地为某端口的SYN到达，但服务器没有在监听</li>
+<li>TCP想取消一个已有链接</li>
+<li>TCP收到一个不存在的连接上的分节<br /></li>
+</ul>
+
+<h3 id="connet">connet</h3>
+
+<ul>
+<li>客户未收到SYN的响应，规定时间内重发SYN，失败返回 ETIMEDOUT<br /></li>
+<li>对客户SYN的响应是RST，表示在指定的端口上没有进程在监听，马上返回 ECONNREFUSED<br /></li>
+<li>客户的SYN在中间路由器引发“destination unreachable”ICMP错误， 规定时间内重发SYN，失败返回 EHOSTUNREACH 或 ENETUNREACH<br /></li>
+</ul>
+
+<h3 id="listen">listen</h3>
+
+<ul>
+<li>客户SYN到达，listen队列是满的，TCP就忽略该分节，不发送RST</li>
+</ul>
+
+<h3 id="accpet">accpet</h3>
+
+<ul>
+<li>三路握手完成，调用accpet之前，收到客户的RST： accept返回 ECONNABORTED 错误</li>
+</ul>
+
+<h3 id="write-1">write</h3>
+
+<ul>
+<li>向一个已收到RST的套接字写操作，内核发送SIGPIPE信号，写操作返回 EPIPE<br /></li>
+<li>服务器崩溃，规定时间内重传，失败后返回 ETIMEOUT，若中间路由判定主机不可达，返回 EHOSTUNREACH 或 ENETUNREACH<br /></li>
+<li>写半部已关闭，EPIPE<br /></li>
+</ul>
+
+<h3 id="read">read</h3>
+
+<ul>
+<li>非阻塞，无数据 EAGAIN  or  EWOULDBLOCK</li>
+</ul>
+
+</div>
+
+        <footer class="post-footer clearfix">
+    
+        <p class="post-tags">
+            <span>Tagged:</span>
+            
+            
+                <a href="/tags/linux/">LINUX</a>, 
+            
+                <a href="/tags/network/">NETWORK</a>
+            
+        </p>
+    
+
+    <div class="share">
+        
+            <a class="icon-twitter" href="https://twitter.com/share?text=UNIX%20%e7%bd%91%e7%bb%9c%e7%bc%96%e7%a8%8b%e4%b8%adSOCKET%e9%94%99%e8%af%af%e5%b0%8f%e7%bb%93&url=https%3a%2f%2fbyteink.net%2f2012%2f12%2f05%2funp_socket_error%2f"
+                onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                <i class="fa fa-twitter"></i>
+                <span class="hidden">Twitter</span>
+            </a>
+        
+
+        
+            <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https%3a%2f%2fbyteink.net%2f2012%2f12%2f05%2funp_socket_error%2f"
+                onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                <i class="fa fa-facebook"></i>
+                <span class="hidden">Facebook</span>
+            </a>
+        
+
+        
+            <a class="icon-google-plus" href="https://plus.google.com/share?url=https%3a%2f%2fbyteink.net%2f2012%2f12%2f05%2funp_socket_error%2f"
+              onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+              <i class="fa fa-google-plus"></i>
+                <span class="hidden">Google+</span>
+            </a>
+        
+        
+    </div>
+</footer>
+
+        
+    </article>
+</div>
+
+            </div>
+        </div>
+
+        <footer class="footer">
+            <div class="container">
+                <div class="site-title-wrapper">
+                    <h1 class="site-title">
+                        <a title="byteink" href="https://byteink.net/">byteink</a>
+                    </h1>
+                    <a class="button-square button-jump-top js-jump-top" href="#">
+                        <i class="fa fa-angle-up"></i>
+                    </a>
+                </div>
+
+                <p class="footer-copyright">
+                    <span>&copy; 2014 / Powered by <a href="https://gohugo.io/">Hugo</a></span>
+                </p>
+                <p class="footer-copyright">
+                    <span><a href="https://github.com/roryg/ghostwriter">Ghostwriter theme</a> By <a href="http://jollygoodthemes.com">JollyGoodThemes</a></span>
+                    <span>/ <a href="https://github.com/jbub/ghostwriter">Ported</a> to Hugo By <a href="https://github.com/jbub">jbub</a></span>
+                </p>
+            </div>
+        </footer>
+
+        <script src="https://byteink.net/js/jquery-1.11.3.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/highlight.min.js"></script>
+        <script src="https://byteink.net/js/jquery.fitvids.js"></script>
+        <script src="https://byteink.net/js/scripts.js"></script>
+    </body>
+</html>
+

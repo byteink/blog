@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>STL中迭代器失效规则及遍历删除问题 &middot; byteink</title>
+        <meta name="description" content="主要讨论 STL 中几种容器的插入和删除操作可能引起的迭代器失效问题。
+本质在于 vector、list、deque、map、set 这几种容器的底层实现机制。
+vector 基于连续内存，对于其之上的插入操作分两种情况：
+1. 若插入未引起扩容行为，则插入点之前的迭代器不会失效，插入点之后的因后移操作而失效；
+2. 插入操作引起扩容行为，则所有迭代器均失效；
+对于其删除行为，由于前移行为，删除点之后的迭代器会失效。
+list 基于节点，对于其之上的插入操作，所有迭代器都不会受到影响；
+删除行为则只会导致被删除节点的迭代器失效。
+deque 基于分段连续内存，对于其之上的插入操作会导致所有的迭代器都失效。
+删除操作分两种情况：
+1）从头部或尾部删除：只会导致被删除位置的迭代器失效；
+2）删除其他位置：所有的迭代器都会失效。
+map 和 set 都属于关联容器，其底层实现基于二叉搜索树（红黑树）。
+对于插入行为，所有迭代器都不会受影响；删除只会影响被删除位置的迭代器。
+另一问题：如何遍历容器中的每个元素，删除所有符合某个条件的元素？
+例如删除所有元素值为某个特定值的元素，或者删除所有值为偶数的元素。
+1. 对于 vector 和 deque 基于连续内存的容器，使用 earse-remove 方法：
+bool isEven(int a) { return a % 2 == 0; } int main() { vector&lt;int&gt; vec({1, 2, 3, 4, 5, 6, 5, 5}); // c&#43;&#43;11 list-initialization // 删除所有值为5的元素 vec.erase(remove(vec.begin(), vec.end(), 5), vec.end()); // 删除偶数元素 vec.">
+        <meta name="HandheldFriendly" content="True">
+        <meta name="MobileOptimized" content="320">
+        <meta name="generator" content="Hugo 0.19" />
+        <meta name="robots" content="index,follow">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        <link rel="stylesheet" href="https://byteink.net/dist/styles.css">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,400,600,700,300&subset=latin,cyrillic-ext,latin-ext,cyrillic">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+        
+    </head>
+    <body>
+        
+
+        <div id="wrapper">
+            <header class="site-header">
+                <div class="container">
+                    <div class="site-title-wrapper">
+                        
+                            <h1 class="site-title">
+                                <a title="byteink" href="https://byteink.net/">byteink</a>
+                            </h1>
+                        
+                        <a class="button-square" href="https://byteink.net/index.xml"><i class="fa fa-rss"></i></a>
+                        
+                        
+                        
+                            <a class="button-square button-social hint--top" data-hint="Github" title="Github" href="https://github.com/byteink">
+                                <i class="fa fa-github-alt"></i>
+                            </a>
+                        
+                        
+                        
+                        
+                        
+                    </div>
+
+                    <ul class="site-nav">
+                        
+    <li class="site-nav-item">
+        <a title="Blog" href="/">Blog</a>
+    </li>
+
+    <li class="site-nav-item">
+        <a title="Projects" href="/project/">Projects</a>
+    </li>
+
+    <li class="site-nav-item">
+        <a title="Contact" href="/page/contact/">Contact</a>
+    </li>
+
+    <li class="site-nav-item">
+        <a title="About" href="/page/about/">About</a>
+    </li>
+
+                    </ul>
+                </div>
+            </header>
+
+            <div id="container">
+
+
+<div class="container">
+    <article class="post-container" itemscope="" itemtype="http://schema.org/BlogPosting">
+        <header class="post-header">
+    <h1 class="post-title" itemprop="name headline">STL中迭代器失效规则及遍历删除问题</h1>
+    
+    <p class="post-date">
+        <span>Published <time datetime="2014-06-25" itemprop="datePublished">Wed, Jun 25, 2014</time></span>
+        <span>by</span>
+        <span itemscope="" itemprop="author" itemtype="https://schema.org/Person">
+            <span itemprop="name">
+                <a href="" itemprop="url" rel="author">byteink</a>
+            </span>
+        </span>
+    </p>
+</header>
+
+        <div class="post-content clearfix" itemprop="articleBody">
+    
+
+    <p>主要讨论 STL 中几种容器的插入和删除操作可能引起的迭代器失效问题。<br />
+本质在于 vector、list、deque、map、set 这几种容器的底层实现机制。</p>
+
+<p>vector 基于连续内存，对于其之上的插入操作分两种情况：<br />
+1. 若插入未引起扩容行为，则插入点之前的迭代器不会失效，插入点之后的因后移操作而失效；<br />
+2. 插入操作引起扩容行为，则所有迭代器均失效；<br />
+对于其删除行为，由于前移行为，删除点之后的迭代器会失效。</p>
+
+<p>list 基于节点，对于其之上的插入操作，所有迭代器都不会受到影响；<br />
+删除行为则只会导致被删除节点的迭代器失效。</p>
+
+<p>deque 基于分段连续内存，对于其之上的插入操作会导致所有的迭代器都失效。<br />
+删除操作分两种情况：<br />
+1）从头部或尾部删除：只会导致被删除位置的迭代器失效；<br />
+2）删除其他位置：所有的迭代器都会失效。</p>
+
+<p>map 和 set 都属于关联容器，其底层实现基于二叉搜索树（红黑树）。<br />
+对于插入行为，所有迭代器都不会受影响；删除只会影响被删除位置的迭代器。</p>
+
+<p>另一问题：如何遍历容器中的每个元素，删除所有符合某个条件的元素？<br />
+例如删除所有元素值为某个特定值的元素，或者删除所有值为偶数的元素。<br />
+1. 对于 vector 和 deque 基于连续内存的容器，使用 earse-remove 方法：</p>
+
+<pre><code class="language-cpp">bool isEven(int a) {
+    return a % 2 == 0;
+}
+
+int main()
+{
+    vector&lt;int&gt; vec({1, 2, 3, 4, 5, 6, 5, 5}); // c++11 list-initialization
+
+    // 删除所有值为5的元素
+    vec.erase(remove(vec.begin(), vec.end(), 5),
+            vec.end());
+    // 删除偶数元素
+    vec.erase(remove_if(vec.begin(), vec.end(), isEven),
+            vec.end());
+}
+</code></pre>
+
+</div>
+
+        <footer class="post-footer clearfix">
+    
+        <p class="post-tags">
+            <span>Tagged:</span>
+            
+            
+                <a href="/tags/c&#43;&#43;/">C&#43;&#43;</a>, 
+            
+                <a href="/tags/stl/">STL</a>
+            
+        </p>
+    
+
+    <div class="share">
+        
+            <a class="icon-twitter" href="https://twitter.com/share?text=STL%e4%b8%ad%e8%bf%ad%e4%bb%a3%e5%99%a8%e5%a4%b1%e6%95%88%e8%a7%84%e5%88%99%e5%8f%8a%e9%81%8d%e5%8e%86%e5%88%a0%e9%99%a4%e9%97%ae%e9%a2%98&url=https%3a%2f%2fbyteink.net%2f2014%2f06%2f25%2fstl_iterator%2f"
+                onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                <i class="fa fa-twitter"></i>
+                <span class="hidden">Twitter</span>
+            </a>
+        
+
+        
+            <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=https%3a%2f%2fbyteink.net%2f2014%2f06%2f25%2fstl_iterator%2f"
+                onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                <i class="fa fa-facebook"></i>
+                <span class="hidden">Facebook</span>
+            </a>
+        
+
+        
+            <a class="icon-google-plus" href="https://plus.google.com/share?url=https%3a%2f%2fbyteink.net%2f2014%2f06%2f25%2fstl_iterator%2f"
+              onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+              <i class="fa fa-google-plus"></i>
+                <span class="hidden">Google+</span>
+            </a>
+        
+        
+    </div>
+</footer>
+
+        
+    </article>
+</div>
+
+            </div>
+        </div>
+
+        <footer class="footer">
+            <div class="container">
+                <div class="site-title-wrapper">
+                    <h1 class="site-title">
+                        <a title="byteink" href="https://byteink.net/">byteink</a>
+                    </h1>
+                    <a class="button-square button-jump-top js-jump-top" href="#">
+                        <i class="fa fa-angle-up"></i>
+                    </a>
+                </div>
+
+                <p class="footer-copyright">
+                    <span>&copy; 2014 / Powered by <a href="https://gohugo.io/">Hugo</a></span>
+                </p>
+                <p class="footer-copyright">
+                    <span><a href="https://github.com/roryg/ghostwriter">Ghostwriter theme</a> By <a href="http://jollygoodthemes.com">JollyGoodThemes</a></span>
+                    <span>/ <a href="https://github.com/jbub/ghostwriter">Ported</a> to Hugo By <a href="https://github.com/jbub">jbub</a></span>
+                </p>
+            </div>
+        </footer>
+
+        <script src="https://byteink.net/js/jquery-1.11.3.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.9.0/highlight.min.js"></script>
+        <script src="https://byteink.net/js/jquery.fitvids.js"></script>
+        <script src="https://byteink.net/js/scripts.js"></script>
+    </body>
+</html>
+
