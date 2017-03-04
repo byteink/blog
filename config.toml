@@ -18,6 +18,7 @@ intro = false
 headline = "My headline"
 description = "My description"
 github = "https://github.com/byteink"
+duoshuo = "byteink"
 # gitlab = "https://gitlab.com/XXX"
 # linkedin = "https://linkedin.com/in/XXX/"
 # gplus = "https://google.com/+XXX"
@@ -25,10 +26,10 @@ github = "https://github.com/byteink"
 # stackoverflow = "https://stackoverflow.com/users/XXX/YYY"
 # email = "XXX@example.com"                                                                                                                                                                                   
 # opengraph = true
-# shareTwitter = true
-# shareFacebook = true
-# shareGooglePlus = true
-# shareLinkedIn = false
+shareTwitter = false
+shareFacebook = false
+shareGooglePlus = false
+shareLinkedIn = false
 dateFormat = "Mon, Jan 2, 2006"
 
 [Permalinks]
