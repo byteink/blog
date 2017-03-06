@@ -43,18 +43,18 @@ Double-Checked Locking Pattern，双重检查锁定模式。
 一种很常见的实现方式：  
 ```cpp
 class Singleton {
-    public:
-        static T* instance() {
-            if (NULL == instance_) { // 第一次检查
-                Lock lock; // 伪代码
-                if (NULL == instance_)  // 第二次检查
-                    instance_ = new T;
-            }
-            return instance_;
-        };
+public:
+    static T* instance() {
+        if (NULL == instance_) { // 第一次检查
+            Lock lock; // 伪代码
+            if (NULL == instance_)  // 第二次检查
+                instance_ = new T;
+        }
+        return instance_;
+    };
 
-    private:
-        static T* instance_;
+private:
+    static T* instance_;
 };
 
 template <class T>
