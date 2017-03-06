@@ -111,7 +111,9 @@ boost::mutex Singleton<T>::mutex_;
 
 
 # 更新
-在C++11中，返回static对象是线程安全的，这无疑是最简单的实现方式。
+在C++11中，返回static对象是线程安全的（Dynamic Initialization and Destruction with Concurrency）。
+实现线程安全的单例模式变得十分简单：
+
 ```cpp
 template <class T>
 static T& Singleton::instance(){
