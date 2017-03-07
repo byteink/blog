@@ -6,3 +6,6 @@ description = "How to contact me."
 +++
 
 ## Contact
+```shell
+echo "am9uYWhnYW94QGdtYWlsLmNvbQo=" | base64 -d
+```
