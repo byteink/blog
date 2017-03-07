@@ -1,5 +1,5 @@
 +++
-title = "bubble sort的改进"
+title = "BUBBLE SORT的改进"
 # description   = "bubble sort的改进"
 tags = [ "Algorithm" ]
 date = "2013-11-04"
