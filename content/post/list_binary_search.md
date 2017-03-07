@@ -97,7 +97,20 @@ int main(int argc, char *argv[])
 }
 ```
 编译，优化级别为O2，运行结果：
-![](http://7xawiv.com1.z0.glb.clouddn.com/list-binary-search.jpg)
+```
+# ./a.out
+target: 49999999
+binary search: 0s 463ms.
+linear search: 0s 178ms.
+
+target: 25000000
+binary search: 0s 326ms.
+linear search: 0s 104ms.
+
+target: 10000000
+binary search: 0s 335ms.
+linear search: 0s 29ms.
+```
 可以看出即使是在线性搜索的最坏情况下（目标为最后一个元素或者不存在），   
 链表的线性搜索也要比二分搜索快得多！
 
